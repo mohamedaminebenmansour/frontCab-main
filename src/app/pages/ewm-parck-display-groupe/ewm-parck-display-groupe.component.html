@@ -1,0 +1,126 @@
+<div class="container mx-auto p-6 space-y-8">
+
+  <!-- ✅ Alert -->
+  <div
+    *ngIf="alertMessage"
+    [ngClass]="{
+      'bg-green-100 border-green-400 text-green-800': alertType === 'success',
+      'bg-red-100 border-red-400 text-red-800': alertType === 'error'
+    }"
+    class="border px-4 py-3 rounded-xl shadow-sm flex items-center gap-3 animate-fade-slide"
+  >
+    <div
+      [ngClass]="{
+        'bg-green-500': alertType === 'success',
+        'bg-red-500': alertType === 'error'
+      }"
+      class="w-8 h-8 flex items-center justify-center rounded-full text-white shadow-md"
+    >
+      <i
+        [ngClass]="{
+          'fa fa-check': alertType === 'success',
+          'fa fa-times': alertType === 'error'
+        }"
+      ></i>
+    </div>
+    <p class="text-sm font-medium">{{ alertMessage }}</p>
+  </div>
+
+  <!-- 🏷️ Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-slide">
+    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Park Display Groups</h1>
+    <button
+      (click)="toggleForm()"
+      class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200"
+    >
+      <i class="fa" [ngClass]="isFormVisible ? 'fa-times' : 'fa-plus'"></i>
+      {{ isFormVisible ? 'Cancel' : 'Add New Group' }}
+    </button>
+  </div>
+
+  <!-- 🧾 Form -->
+  <div
+    *ngIf="isFormVisible"
+    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-slide"
+  >
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">
+      {{ isEditing ? 'Edit Group' : 'Add Group' }}
+    </h2>
+
+    <form (ngSubmit)="saveGroupe()" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Code</label>
+        <input
+          [(ngModel)]="selectedGroupe.code"
+          name="code"
+          type="text"
+          placeholder="Enter code (e.g., GRP_CABLE)"
+          required
+          class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Libelle</label>
+        <input
+          [(ngModel)]="selectedGroupe.libelle"
+          name="libelle"
+          type="text"
+          placeholder="Enter libelle (e.g., Cable Storage)"
+          required
+          class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+        />
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="block text-sm font-medium text-gray-600 mb-1">Description</label>
+        <textarea
+          [(ngModel)]="selectedGroupe.description"
+          name="description"
+          placeholder="Enter description (optional)"
+          class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+        ></textarea>
+      </div>
+
+      <div class="sm:col-span-2 flex justify-end mt-4">
+        <button
+          type="submit"
+          class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-2.5 rounded-lg shadow-md hover:opacity-90 transition-all duration-200"
+        >
+          {{ isEditing ? 'Update' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 📋 Table -->
+  <div class="overflow-x-auto rounded-2xl shadow-lg border border-gray-100 animate-fade-slide">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">ID</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Code</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Libelle</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Description</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let groupe of parckDisplayGroupes" (click)="editGroupe(groupe)" class="cursor-pointer hover:bg-blue-50 transition-all duration-200">
+          <td class="px-6 py-4 font-medium text-gray-800">{{ groupe.id }}</td>
+          <td class="px-6 py-4 text-gray-700">{{ groupe.code }}</td>
+          <td class="px-6 py-4 text-gray-700">{{ groupe.libelle }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ groupe.description || '-' }}</td>
+          <td class="px-6 py-4 text-right">
+            <button
+              (click)="deleteGroupe(groupe.id!); $event.stopPropagation()"
+              class="text-red-500 hover:text-red-700 font-medium transition"
+            >
+              <i class="fa fa-trash mr-1"></i> Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

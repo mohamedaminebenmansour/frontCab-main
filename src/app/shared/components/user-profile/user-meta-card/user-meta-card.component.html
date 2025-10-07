@@ -1,0 +1,73 @@
+<div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+  <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <div class="flex flex-col items-center w-full gap-6 xl:flex-row">
+      <div class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
+        <img [src]="user.profilePicture || '/images/user/owner.jpg'" alt="user" />
+      </div>
+      <div class="order-3 xl:order-2">
+        <h4 class="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+          {{ user.firstName }} {{ user.lastName }}
+        </h4>
+        <div class="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ user.roles[0] || 'Team Manager' }}
+          </p>
+          <div class="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ user.address || 'Arizona, United States' }}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+        <!-- Social links remain static or bind if added to DTO -->
+      </div>
+    </div>
+
+    <button (click)="openModal()" class="...">Edit</button>
+  </div>
+</div>
+
+<app-modal [isOpen]="isOpen" (close)="closeModal()" className="max-w-[700px] m-4">
+  <div class="...">
+    <form (ngSubmit)="handleSave()">
+      <div class="...">
+        <!-- Social Links (add ngModel if backend supports) -->
+
+        <!-- Similar for other socials -->
+      </div>
+      <div class="mt-7">
+        <h5>Personal Information</h5>
+        <div class="...">
+          <div>
+            <app-label>First Name</app-label>
+            <app-input-field type="text" [(ngModel)]="user.firstName" name="firstName" />
+          </div>
+          <div>
+            <app-label>Last Name</app-label>
+            <app-input-field type="text" [(ngModel)]="user.lastName" name="lastName" />
+          </div>
+          <div>
+            <app-label>Email Address</app-label>
+            <app-input-field type="email" [(ngModel)]="user.email" name="email" />
+          </div>
+          <div>
+            <app-label>Phone</app-label>
+            <app-input-field type="text" [(ngModel)]="user.phoneNumber" name="phoneNumber" />
+          </div>
+          <div>
+            <app-label>Bio</app-label>
+            <app-input-field type="text" [(ngModel)]=" user.roles[0]" name="bio" />
+          </div>
+          <div>
+            <app-label>Profile Picture</app-label>
+            <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+        <app-button size="sm" variant="outline" (btnClick)="closeModal()">Close</app-button>
+        <app-button size="sm" type="submit">Save Changes</app-button>
+      </div>
+    </form>
+  </div>
+</app-modal>

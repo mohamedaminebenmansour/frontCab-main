@@ -1,0 +1,133 @@
+<div class="container mx-auto p-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-2xl font-bold text-gray-800">Storage Type Transfer Rules</h2>
+    <button (click)="openModal()"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+      + Add New Rule
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+    <div class="flex items-center gap-2">
+      <label class="font-medium text-gray-700">Filter by Source Type:</label>
+      <select [(ngModel)]="filterType" (change)="applyFilters()"
+              class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+        <option>All</option>
+        <option *ngFor="let code of binCodes" [value]="code">{{ code }}</option>
+      </select>
+    </div>
+    <input [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Search Rules..."
+           class="p-2 border rounded-lg w-60 focus:ring-2 focus:ring-blue-500" />
+  </div>
+
+  <!-- Rules Table -->
+  <div class="overflow-x-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg border">
+    <table class="min-w-full border-collapse">
+      <thead class="bg-gray-200 dark:bg-gray-700">
+        <tr>
+          <th class="p-3 text-left border-b border-gray-300">From Type</th>
+          <th class="p-3 text-left border-b border-gray-300">Allowed Transfers To</th>
+          <th class="p-3 text-left border-b border-gray-300">Blocked Transfers To</th>
+          <th class="p-3 text-left border-b border-gray-300">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rule of filteredRules" class="hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <td class="p-3 border-b border-gray-300">{{ rule.ewm_CodeLocation_FROM }}</td>
+          <td class="p-3 border-b border-gray-300 text-green-600">{{ rule.allowTranferTO || '-' }}</td>
+          <td class="p-3 border-b border-gray-300 text-red-600">{{ rule.blockTranferTO || '-' }}</td>
+          <td class="p-3 border-b border-gray-300 flex gap-2">
+            <button (click)="openModal(rule)"
+                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+              Edit
+            </button>
+            <button (click)="deleteRule(rule.idemw_Location_Rules!)"
+                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredRules.length === 0">
+          <td colspan="4" class="p-3 text-center text-gray-500">No rules found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+     (click)="closeModal()">
+  <div class="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mx-4 md:mx-0 overflow-y-auto max-h-[90vh]"
+       (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="sticky top-0 bg-white dark:bg-gray-800 flex justify-between items-center mb-4 pb-2 border-b border-gray-300 dark:border-gray-600">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+        Configure Rules for: {{ ruleForm.get('ewm_CodeLocation_FROM')?.value || 'New' }}
+      </h3>
+      <button (click)="closeModal()"
+              class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition rounded-full p-1">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <form [formGroup]="ruleForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+      <!-- Source Type -->
+      <div>
+        <label class="block text-gray-700 dark:text-gray-200 font-medium">Source Storage Type:</label>
+        <select formControlName="ewm_CodeLocation_FROM" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+          <option value="">Select Location</option>
+          <option *ngFor="let code of binCodes" [value]="code">{{ code }}</option>
+        </select>
+        <div *ngIf="ruleForm.get('ewm_CodeLocation_FROM')?.invalid && ruleForm.get('ewm_CodeLocation_FROM')?.touched"
+             class="text-red-500 text-sm mt-1">
+          Source is required.
+        </div>
+      </div>
+
+      <!-- Allowed Transfers -->
+      <div>
+        <label class="block text-green-700 font-semibold mb-1">✅ Allowed Transfers To:</label>
+        <div class="flex flex-wrap gap-3 border p-3 rounded-lg">
+          <label *ngFor="let code of binCodes" class="flex items-center gap-1">
+            <input type="checkbox" [checked]="locationStates[code].allowed"
+                   (change)="toggleAllowed(code, $event.target.checked)" />
+            {{ code }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Blocked Transfers -->
+      <div>
+        <label class="block text-red-700 font-semibold mb-1">❌ Blocked Transfers To:</label>
+        <div class="flex flex-wrap gap-3 border p-3 rounded-lg">
+          <label *ngFor="let code of binCodes" class="flex items-center gap-1">
+            <input type="checkbox" [checked]="locationStates[code].blocked"
+                   (change)="toggleBlocked(code, $event.target.checked)" />
+            {{ code }}
+          </label>
+        </div>
+      </div>
+
+      <p class="text-sm text-gray-500 dark:text-gray-400">💡 Rules ensure proper stock flow between storage areas.</p>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 mt-4">
+        <button type="button" (click)="closeModal()"
+                class="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600 transition">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="ruleForm.invalid"
+                class="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition">
+          {{ isEditMode ? 'Update Rules' : 'Save Rules' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
