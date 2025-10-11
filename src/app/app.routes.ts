@@ -1,3 +1,8 @@
+// src/app/app.routes.ts
+// Explanation: Applied AuthGuard to all protected routes under AppLayoutComponent.
+// - Added RoleGuard to specific routes, e.g., admin-only like 'ewm-storage-bin-rules' requires ['Admin', 'SuperAdmin'].
+// - Add more data: { roles: [...] } as needed for other routes.
+// - Signin/Signup are public.
 import { Routes } from '@angular/router';
 import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
 import { ProfileComponent } from './pages/profile/profile.component';
@@ -19,7 +24,7 @@ import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { EWMAturizedStatusComponent } from './pages/ewm-aturized-status/ewm-aturized-status.component';
-import { EWMParckDisplayGroupeComponent } from './pages/ewm-parck-display-groupe/ewm-parck-display-groupe.component'; // Add this import
+import { EWMParckDisplayGroupeComponent } from './pages/ewm-parck-display-groupe/ewm-parck-display-groupe.component';
 import { EwmStorageBinTypeComponent } from './pages/ewm-storage-bin-type/ewm-storage-bin-type.component';
 import { EwmStorageBinGroupeComponent } from './pages/ewm-storage-bin-groupe/ewm-storage-bin-groupe.component';
 import { EwmStorageTypeComponent } from './pages/ewm-storage-type/ewm-storage-type.component';
@@ -33,11 +38,16 @@ import { GroupListComponent } from './groups/group-list/group-list.component';
 import { BinFormComponent } from './groups/bin-form/bin-form.component';
 import { StorageBinRulesComponent } from './pages/storage-bin-rules/storage-bin-rules.component';
 import { EwmStorageTypeRulesComponent } from './pages/ewm-storage-type-rules/ewm-storage-type-rules.component';
+import { HandlingUnitTransactionsComponent } from './groups/handling-unit-transactions/handling-unit-transactions.component';
+import { AuthGuard } from './guards/auth.guard'; // Import AuthGuard
+import { RoleGuard } from './guards/role.guard'; // Import RoleGuard
+import { UsersManagementComponent } from './pages/users-management/users-management.component';
 
 export const routes: Routes = [
   {
     path: '',
     component: AppLayoutComponent,
+    canActivate: [AuthGuard], // Protect all child routes with login
     children: [
       {
         path: '',
@@ -54,11 +64,14 @@ export const routes: Routes = [
         path: 'profile',
         component: ProfileComponent,
         title: 'Profile Dashboard ',
+        data: { roles: ['User', 'Admin', 'SuperAdmin'] }
       },
       {
         path: 'form-elements',
         component: FormElementsComponent,
         title: 'Form Elements Dashboard ',
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'SuperAdmin'] } // Admin-only example
       },
       {
         path: 'basic-tables',
@@ -106,6 +119,13 @@ export const routes: Routes = [
         title: 'Buttons Dashboard ',
       },
       {
+  path: 'users',
+  component: UsersManagementComponent,
+  title: 'User Management',
+  canActivate: [RoleGuard],
+  data: { roles: ['SuperAdmin'] }
+},
+      {
         path: 'images',
         component: ImagesComponent,
         title: 'Images Dashboard ',
@@ -124,17 +144,17 @@ export const routes: Routes = [
         path: 'parck-display-groupes',
         component: EWMParckDisplayGroupeComponent,
         title: 'Park Display Groups Dashboard ',
-      }, // Added route
+      },
       {
         path: 'ewm-storage-bin-type',
         component: EwmStorageBinTypeComponent,
         title: 'Park Storage Bin Type ',
-      }, // Added route
+      },
       {
         path: 'ewm-storage-bin-groupe',
         component: EwmStorageBinGroupeComponent,
         title: 'Park Storage Bin groupe ',
-      }, // Added route
+      },
       {
         path: 'ewm-storage-type',
         component: EwmStorageTypeComponent,
@@ -144,16 +164,13 @@ export const routes: Routes = [
         path: 'ewm-storage-bin-rules',
         component: StorageBinRulesComponent,
         title: 'Storage Bin Rules',
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'SuperAdmin'] } // Admin-only
       },
       {
         path: 'storage-bins',
         component: EwmStorageBinsComponent,
         title: 'Storage Bin',
-      },
-      {
-        path: 'storage-bin-details',
-        component: EwmStorageBinDetailsComponent,
-        title: 'Storage Bin Details',
       },
       {
         path: 'storage-bin-details',
@@ -178,6 +195,8 @@ export const routes: Routes = [
   { path: 'bin-form/:groupId/:binId', component: BinFormComponent ,title: 'edit bins',}, // For edit
 { path: 'storage-bin-rules', component: StorageBinRulesComponent,title:'Storage Bin Rules' },
 { path: 'storage-type-rules', component: EwmStorageTypeRulesComponent },
+      // New route for handling unit transactions
+      { path: 'handling-unit/:id/transactions', component: HandlingUnitTransactionsComponent, title: 'Handling Unit Transactions' },
   
     ],
   },

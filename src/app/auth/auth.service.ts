@@ -1,17 +1,24 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoginDto } from '../models/login-dto';
 import { TokenResponseDto } from '../models/token-response-dto';
-
+import { jwtDecode } from 'jwt-decode'; // Fixed import: Named import
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  private rolesSubject = new BehaviorSubject<string[]>([]);
+  roles$ = this.rolesSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    if (this.isLoggedIn()) {
+      this.updateRoles();
+    }
+  }
 
   login(loginData: LoginDto): Observable<TokenResponseDto> {
     return this.http.post<TokenResponseDto>(`${this.apiUrl}/auth/login`, loginData).pipe(
@@ -20,6 +27,7 @@ export class AuthService {
           localStorage.setItem('authToken', response.token);
           console.log('Login successful! Token stored:', response.token);
           this.logTokenDetails(response.token);
+          this.updateRoles();
         } else {
           console.error('No token in response');
         }
@@ -32,6 +40,7 @@ export class AuthService {
       tap(() => {
         localStorage.removeItem('authToken');
         console.log('Logout successful! Token removed from localStorage');
+        this.rolesSubject.next([]);
       })
     );
   }
@@ -51,6 +60,7 @@ export class AuthService {
       console.log('Token status:', isExpired ? 'Expired' : 'Valid');
       if (isExpired) {
         localStorage.removeItem('authToken');
+        this.rolesSubject.next([]);
         return false;
       }
       return true;
@@ -66,16 +76,59 @@ export class AuthService {
     return Date.now() >= payload.exp * 1000;
   }
 
-  private decodeToken(token: string): any {
+private decodeToken(token: string): any {
     try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-      return JSON.parse(jsonPayload);
+      const payload = jwtDecode(token);
+      console.log('decodeToken: Decoded payload:', payload); // New log for debug
+      return payload;
     } catch (error) {
       console.error('Token decoding failed:', error);
       return null;
     }
+  }
+
+  getRoles(): string[] {
+    const token = this.getToken();
+    if (!token) return [];
+    const payload = this.decodeToken(token);
+
+    console.log('getRoles: Raw token payload:', payload);
+
+    let roles = payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+                payload?.role ||
+                payload?.roles ||
+                [];
+
+    if (typeof roles === 'string') {
+      roles = [roles];
+    }
+
+    console.log('getRoles: Extracted roles:', roles); // Existing, but emphasize for debug
+
+    return roles;
+  }
+
+  private updateRoles() {
+    this.rolesSubject.next(this.getRoles());
+  }
+
+  hasRole(role: string): boolean {
+    const roles = this.getRoles();
+    const has = roles.includes(role);
+    console.log(`hasRole: Checking for "${role}" in user roles ${roles} - Result: ${has}`); // New debug log
+    return has;
+  }
+
+  isSuperAdmin(): boolean {
+    return this.hasRole('SuperAdmin');
+  }
+
+  isAdmin(): boolean {
+    return this.hasRole('Admin') || this.isSuperAdmin();
+  }
+
+  isUser(): boolean {
+    return this.hasRole('User') || this.isAdmin();
   }
 
   private logTokenDetails(token: string): void {

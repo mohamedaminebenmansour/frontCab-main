@@ -327,6 +327,9 @@ deleteStorageTypeRulee(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/HandlingUnit/${id}`)
       .pipe(catchError(this.handleError));
   }
+  getHandlingUnitTransactions(id: number): Observable<StockMovement[]> {
+  return this.http.get<StockMovement[]>(`${this.apiUrl}/handlingunit/${id}/transactions`);
+}
 
   // StockMovement CRUD
   getStockMovements(): Observable<StockMovement[]> {

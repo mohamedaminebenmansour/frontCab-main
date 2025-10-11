@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router'; // Updated: Added Router
 import { ApiService } from '../../shared/services/api.service';
 import { EWM_Parck_DisplayGroupe } from '../../models/ewm-parck-display-groupe.model';
 import { EWM_StorageBin } from '../../models/ewm-storage-bin.model'; // Updated import
@@ -39,7 +39,7 @@ export class BinListComponent implements OnInit {
   selectedHU: HandlingUnit = this.resetHUObject();
   currentBin: EWM_StorageBin | null = null;
 
-  constructor(private apiService: ApiService, private route: ActivatedRoute) {}
+  constructor(private apiService: ApiService, private route: ActivatedRoute, private router: Router) {} // Updated: Added Router
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -310,4 +310,14 @@ export class BinListComponent implements OnInit {
     return status;
     // Alternative: if (bin.atorizedStatus === '1002') return '🟢 Full';
   }
+
+  // New method for navigating to transactions
+  // In your component class
+viewTransactions(id: number | undefined): void {
+  if (id === undefined) {
+    console.warn('Handling Unit ID is undefined');
+    return;
+  }
+  this.router.navigate(['/handling-unit', id, 'transactions']);
+}
 }

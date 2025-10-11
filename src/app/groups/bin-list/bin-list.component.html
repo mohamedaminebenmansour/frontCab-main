@@ -214,8 +214,9 @@
                 <div class="flex flex-wrap mt-2">
                     @if (bin.handlingUnits && bin.handlingUnits.length > 0) {
                     @for (hu of bin.handlingUnits; track hu.idHandlingUnit) {
-                    <div class="relative group m-1">
-                        <div class="w-6 h-6 rounded-full bg-green-500 animate-blink cursor-pointer"></div>
+                    <div (click)="viewTransactions(hu.idHandlingUnit)" class="relative group m-1 cursor-pointer">
+                        <!-- Updated: Added (click) and cursor-pointer -->
+                        <div class="w-6 h-6 rounded-full bg-green-500 animate-blink"></div>
                         <div
                             class="absolute left-0 top-full mt-1 w-48 bg-white border border-gray-300 p-2 rounded-md shadow-md hidden group-hover:block z-10">
                             <p><strong>ID:</strong> {{ hu.idHandlingUnit }}</p>

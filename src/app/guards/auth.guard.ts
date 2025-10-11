@@ -1,17 +1,25 @@
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+// src/app/guards/auth.guard.ts (New File)
+// Explanation: Checks if user is logged in. Redirects to /signin if not.
+// - Can be applied to routes requiring authentication.
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthGuard implements CanActivate {
+  constructor(private authService: AuthService, private router: Router) {}
 
-  if (authService.isLoggedIn()) {
-    console.log('Guard: User is logged in, allowing access');
-    return true;
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): boolean {
+    if (this.authService.isLoggedIn()) {
+      return true;
+    } else {
+      this.router.navigate(['/signin']);
+      return false;
+    }
   }
-
-  console.log('Guard: User not logged in, redirecting to sign-in');
-  router.navigate(['/sign-in']);
-  return false;
-};
+}

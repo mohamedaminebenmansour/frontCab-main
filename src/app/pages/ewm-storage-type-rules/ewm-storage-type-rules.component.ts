@@ -40,10 +40,11 @@ export class EwmStorageTypeRulesComponent implements OnInit {
     this.apiService.getStorageTypeRuless().subscribe({
       next: (rules) => {
         console.log('Loaded rules successfully:', rules);
-        // Transform data: Add lowercase 'm' property from backend's uppercase 'M'
+        // Transform data: Map properties to handle casing variations from API
         this.rules = rules.map(rule => ({
           ...rule,
-          ewm_Code_StorageType_From: rule.ewM_Code_StorageType_From
+          idewm_Location_Rules: rule.idewm_Location_Rules ?? rule.idewm_Location_Rules,
+          ewM_Code_StorageType_From: rule.ewM_Code_StorageType_From ?? rule.ewM_Code_StorageType_From,
         }));
         this.applyFilters();
       },
@@ -90,6 +91,7 @@ export class EwmStorageTypeRulesComponent implements OnInit {
     if (rule) {
       this.isEditMode = true;
       this.selectedId = rule.idewm_Location_Rules;
+      console.log('Set selectedId to:', this.selectedId);
       this.ruleForm.patchValue({ ewm_Code_StorageType_From: rule.ewM_Code_StorageType_From });
       const allowedSet = new Set((rule.allowTranferTO || '').split(',').map((s) => s.trim()).filter(Boolean));
       const blockedSet = new Set((rule.blockTranferTO || '').split(',').map((s) => s.trim()).filter(Boolean));
@@ -151,18 +153,29 @@ export class EwmStorageTypeRulesComponent implements OnInit {
     }
   }
 
-  deleteRule(id: number): void {
-    if (confirm('Are you sure you want to delete this rule?')) {
+  deleteRulee(id: number): void {
+    console.log('deleteRulee function called with id:', id);
+    if (id === undefined) {
+      console.error('Cannot delete, ID is undefined');
+      return;
+    }
+    console.log('Before confirming deletion for ID:', id);
+    if (confirm(`Are you sure you want to delete this rule with ID ${id}?`)) {
       console.log('Deleting rule with ID:', id);
-      this.apiService.deleteStorageTypeRule(id).subscribe({
+      this.apiService.deleteStorageTypeRulee(id).subscribe({
         next: () => {
-          console.log('Rule deleted successfully');
+          console.log('Rule deleted successfully for ID:', id);
           this.loadRules();
+          if (this.showModal) {
+            this.closeModal();
+          }
         },
         error: (err) => {
-          console.error('Error deleting rule:', err);
+          console.error('Error deleting rule with ID:', id, err);
         }
       });
+    } else {
+      console.log('Deletion cancelled for ID:', id);
     }
   }
 
