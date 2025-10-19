@@ -1,0 +1,131 @@
+<!-- src/app/pages/product-orders/product-orders.component.html -->
+<div class="p-4">
+    <h2 class="text-2xl font-bold mb-4">Product Orders Management</h2>
+
+    <p-button label="Create New" icon="pi pi-plus" (click)="openCreateDialog()" class="mb-4"></p-button>
+
+    <p-table [value]="productOrders()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Order Number</th>
+                <th>Description</th>
+                <th>Order Date</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Planned Qty</th>
+                <th>Actual Qty</th>
+                <th>UOM</th>
+                <th>Material</th>
+                <th>Production Version</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-order>
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.orderNumber }}</td>
+                <td>{{ order.orderDescription }}</td>
+                <td>{{ order.orderDate | date }}</td>
+                <td>{{ order.startDate | date }}</td>
+                <td>{{ order.endDate | date }}</td>
+                <td>{{ order.plannedQuantity }}</td>
+                <td>{{ order.actualQuantity }}</td>
+                <td>{{ order.unitOfMeasure }}</td>
+                <td>{{ getMaterialLabel(order.material) }}</td>
+                <td>{{ getProductionVersionLabel(order.productionVersion) }}</td>
+                <td class="flex space-x-2">
+                    <p-button icon="pi pi-send" (click)="sendProductOrder(order)"
+                        styleClass="p-button-rounded p-button-info" pTooltip="Send"></p-button>
+                    <p-button icon="pi pi-refresh" (click)="requestProductOrder(order)"
+                        styleClass="p-button-rounded p-button-primary" pTooltip="Request"></p-button>
+                    <p-button icon="pi pi-trash" (click)="deleteProductOrder(order)"
+                        styleClass="p-button-rounded p-button-danger" pTooltip="Delete"></p-button>
+                </td>
+            </tr>
+            <tr *ngIf="selectedProductOrder()?.id === order.id">
+                <td colspan="12">
+                    <div class="p-2 bg-gray-100 rounded-md">
+                        <h3 class="text-lg font-semibold">Details:</h3>
+                        <p>Created At: {{ order.createdAt | date }}</p>
+                        <p>Last Updated: {{ order.lastUpdated | date }}</p>
+                        <h3 class="text-lg font-semibold">Material:</h3>
+                        <ul class="list-disc pl-5">
+                            <li *ngFor="let class of order.material.classifications">
+                                Class ID: {{ class.id }}, Characteristics: {{ class.characteristics | json }}
+                            </li>
+                        </ul>
+                        <h3 class="text-lg font-semibold">Production Version:</h3>
+                        <p>BOM: {{ order.productionVersion.bom | json }}</p>
+                        <p>Routing: {{ order.productionVersion.routing | json }}</p>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <!-- Create Dialog -->
+    <p-dialog header="Create Product Order" [visible]="displayFormDialog()"
+        (visibleChange)="displayFormDialog.set($event)" [modal]="true" [style]="{width: '50vw'}">
+        <form [formGroup]="productOrderForm" class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="orderNumber">Order Number</label>
+                <input id="orderNumber" formControlName="orderNumber" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="orderDescription">Description</label>
+                <input id="orderDescription" formControlName="orderDescription" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="orderDate">Order Date</label>
+                <input type="date" id="orderDate" formControlName="orderDate" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" formControlName="startDate" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" formControlName="endDate" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="plannedQuantity">Planned Quantity</label>
+                <input type="number" id="plannedQuantity" formControlName="plannedQuantity"
+                    class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="actualQuantity">Actual Quantity</label>
+                <input type="number" id="actualQuantity" formControlName="actualQuantity"
+                    class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="unitOfMeasure">UOM</label>
+                <input id="unitOfMeasure" formControlName="unitOfMeasure" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="materialId">Material</label>
+                <select id="materialId" formControlName="materialId" class="w-full rounded-md border p-2">
+                    <option value="0" disabled selected>Select</option>
+                    <option *ngFor="let mat of allMaterials()" [value]="mat.id">{{ mat.description }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="productionVersionId">Production Version</label>
+                <select id="productionVersionId" formControlName="productionVersionId"
+                    class="w-full rounded-md border p-2">
+                    <option value="0" disabled selected>Select</option>
+                    <option *ngFor="let pv of allProductionVersions()" [value]="pv.id">{{ pv.description }}</option>
+                </select>
+            </div>
+        </form>
+        <ng-template pTemplate="footer">
+            <p-button label="Save" icon="pi pi-check" (click)="saveProductOrder()"
+                styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayFormDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+</div>

@@ -1,0 +1,96 @@
+<!-- src/app/pages/routing/routing.component.html -->
+<div class="p-4">
+    <h2 class="text-2xl font-bold mb-4">Routings Management</h2>
+
+    <p-button label="Create New" icon="pi pi-plus" (click)="openCreateDialog()" class="mb-4"></p-button>
+
+    <p-table [value]="routings()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Routing Number</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-routing>
+            <tr>
+                <td>{{ routing.id }}</td>
+                <td>{{ routing.routingNumber }}</td>
+                <td>{{ routing.description }}</td>
+                <td class="flex space-x-2">
+                    <p-button icon="pi pi-pencil" (click)="openEditDialog(routing)"
+                        styleClass="p-button-rounded p-button-success" pTooltip="Edit"></p-button>
+                    <p-button icon="pi pi-trash" (click)="deleteRouting(routing)"
+                        styleClass="p-button-rounded p-button-danger" pTooltip="Delete"></p-button>
+                    <p-button icon="pi pi-plus-circle" (click)="openWorkCenterDialog(routing, true)"
+                        styleClass="p-button-rounded p-button-info" pTooltip="Add Work Center"></p-button>
+                    <p-button icon="pi pi-minus-circle" (click)="openWorkCenterDialog(routing, false)"
+                        styleClass="p-button-rounded p-button-warning" pTooltip="Remove Work Center"></p-button>
+                </td>
+            </tr>
+            <tr *ngIf="selectedRouting()?.id === routing.id">
+                <td colspan="4">
+                    <div class="p-2 bg-gray-100 rounded-md">
+                        <h3 class="text-lg font-semibold">Details:</h3>
+                        <p>Routing Number: {{ routing.routingNumber }}</p>
+                        <p>Description: {{ routing.description }}</p>
+                        <p>Created At: {{ routing.createdAt | date }}</p>
+                        <p>Last Updated: {{ routing.lastUpdated | date }}</p>
+                        <h3 class="text-lg font-semibold">Work Centers:</h3>
+                        <ul class="list-disc pl-5">
+                            <li *ngFor="let wc of routing.workCenters">
+                                {{ wc.description }} (ID: {{ wc.id }})
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <!-- Form Dialog for Create/Edit -->
+    <p-dialog [header]="isEditMode() ? 'Edit Routing' : 'Create Routing'" [visible]="displayFormDialog()"
+        (visibleChange)="displayFormDialog.set($event)" [modal]="true" [style]="{width: '50vw'}">
+        <form [formGroup]="routingForm" class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="routingNumber" class="block mb-1 font-medium">Routing Number</label>
+                <input type="text" id="routingNumber" formControlName="routingNumber"
+                    class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="description" class="block mb-1 font-medium">Description</label>
+                <input type="text" id="description" formControlName="description"
+                    class="w-full rounded-md border p-2" />
+            </div>
+        </form>
+        <ng-template pTemplate="footer">
+            <p-button label="Save" icon="pi pi-check" (click)="saveRouting()" styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayFormDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Work Center Dialog for Add/Remove -->
+    <p-dialog [header]="isAddMode() ? 'Add Work Center' : 'Remove Work Center'" [visible]="displayWorkCenterDialog()"
+        (visibleChange)="displayWorkCenterDialog.set($event)" [modal]="true" [style]="{width: '30vw'}">
+        <div>
+            <label for="workCenterId" class="block mb-1 font-medium">Work Center</label>
+            <select id="workCenterId" [ngModel]="selectedWorkCenterId()"
+                (ngModelChange)="selectedWorkCenterId.set($event)" class="w-full rounded-md border p-2">
+                <option value="0" disabled selected>Select a work center</option>
+                <option *ngFor="let opt of isAddMode() ? workCentersForAdd() : workCentersForRemove()"
+                    [value]="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Submit" icon="pi pi-check" (click)="manageWorkCenter()"
+                styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayWorkCenterDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+</div>

@@ -12,7 +12,7 @@ import { ProfileUpdateDto } from '../../models/profile-update-dto';
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.capStockManagerApiUrl;
 
   constructor(private http: HttpClient) {}
 

@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5117/api'
+  capStockManagerApiUrl: 'http://localhost:5117/api',  // Your existing CapStockManager URL
+  mescoFiApiUrl: 'http://localhost:5118/api'           // New MESCOFI URL (from MESCOFI.http)
 };

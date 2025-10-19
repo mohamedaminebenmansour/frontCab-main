@@ -1,0 +1,113 @@
+<!-- src/app/pages/event/event.component.html -->
+<!-- Unchanged from previous, as it already has the fields -->
+<div class="p-4">
+    <h2 class="text-2xl font-bold mb-4">Events Management</h2>
+
+    <p-button label="Create New" icon="pi pi-plus" (click)="openCreateDialog()" class="mb-4"></p-button>
+
+    <p-table [value]="events()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Event Type</th>
+                <th>Event Date</th>
+                <th>Control Model</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-event>
+            <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.name }}</td>
+                <td>{{ getEventTypeLabel(event.eventType) }}</td>
+                <td>{{ event.eventDate | date }}</td>
+                <td>{{ getControlModelLabel(event.controlModelId) }}</td>
+                <td class="flex space-x-2">
+                    <p-button icon="pi pi-pencil" (click)="openEditDialog(event)"
+                        styleClass="p-button-rounded p-button-success" pTooltip="Edit"></p-button>
+                    <p-button icon="pi pi-trash" (click)="deleteEvent(event)"
+                        styleClass="p-button-rounded p-button-danger" pTooltip="Delete"></p-button>
+                    <p-button icon="pi pi-plus-circle" (click)="openCharacteristicDialog(event, true)"
+                        styleClass="p-button-rounded p-button-info" pTooltip="Add Characteristic"></p-button>
+                    <p-button icon="pi pi-minus-circle" (click)="openCharacteristicDialog(event, false)"
+                        styleClass="p-button-rounded p-button-warning" pTooltip="Remove Characteristic"></p-button>
+                </td>
+            </tr>
+            <tr *ngIf="selectedEvent()?.id === event.id">
+                <td colspan="6">
+                    <div class="p-2 bg-gray-100 rounded-md">
+                        <h3 class="text-lg font-semibold">Details:</h3>
+                        <p>Event Type: {{ getEventTypeLabel(event.eventType) }}</p>
+                        <p>Event Date: {{ event.eventDate | date }}</p>
+                        <p>Created At: {{ event.createdAt | date }}</p>
+                        <p>Last Updated: {{ event.lastUpdated | date }}</p>
+                        <h3 class="text-lg font-semibold">Characteristics:</h3>
+                        <ul class="list-disc pl-5">
+                            <li *ngFor="let char of event.characteristics">
+                                {{ char.characteristicName }} (ID: {{ char.id }})
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <!-- Form Dialog for Create/Edit -->
+    <p-dialog [header]="isEditMode() ? 'Edit Event' : 'Create Event'" [visible]="displayFormDialog()"
+        (visibleChange)="displayFormDialog.set($event)" [modal]="true" [style]="{width: '50vw'}">
+        <form [formGroup]="eventForm" class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="name" class="block mb-1 font-medium">Name</label>
+                <input type="text" id="name" formControlName="name" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="eventType" class="block mb-1 font-medium">Event Type</label>
+                <select id="eventType" formControlName="eventType" class="w-full rounded-md border p-2">
+                    <option *ngFor="let opt of eventTypeOptions" [value]="opt.value">{{ opt.label }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="eventDate" class="block mb-1 font-medium">Event Date</label>
+                <input type="date" id="eventDate" formControlName="eventDate" class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="controlModelId" class="block mb-1 font-medium">Control Model</label>
+                <select id="controlModelId" formControlName="controlModelId" class="w-full rounded-md border p-2">
+                    <option value="0" disabled selected>Select a control model</option>
+                    <option *ngFor="let cm of allControlModels()" [value]="cm.id">{{ cm.description }}</option>
+                </select>
+            </div>
+        </form>
+        <ng-template pTemplate="footer">
+            <p-button label="Save" icon="pi pi-check" (click)="saveEvent()" styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayFormDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Characteristic Dialog for Add/Remove -->
+    <p-dialog [header]="isAddMode() ? 'Add Characteristic' : 'Remove Characteristic'"
+        [visible]="displayCharacteristicDialog()" (visibleChange)="displayCharacteristicDialog.set($event)"
+        [modal]="true" [style]="{width: '30vw'}">
+        <div>
+            <label for="characteristicId" class="block mb-1 font-medium">Characteristic</label>
+            <select id="characteristicId" [ngModel]="selectedCharacteristicId()"
+                (ngModelChange)="selectedCharacteristicId.set($event)" class="w-full rounded-md border p-2">
+                <option value="0" disabled selected>Select a characteristic</option>
+                <option *ngFor="let opt of isAddMode() ? characteristicsForAdd() : characteristicsForRemove()"
+                    [value]="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Submit" icon="pi pi-check" (click)="manageCharacteristic()"
+                styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayCharacteristicDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+</div>

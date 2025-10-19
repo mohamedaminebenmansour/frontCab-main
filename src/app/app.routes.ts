@@ -42,6 +42,17 @@ import { HandlingUnitTransactionsComponent } from './groups/handling-unit-transa
 import { AuthGuard } from './guards/auth.guard'; // Import AuthGuard
 import { RoleGuard } from './guards/role.guard'; // Import RoleGuard
 import { UsersManagementComponent } from './pages/users-management/users-management.component';
+import { WorkCenterComponent } from './pages/work-center/work-center.component';
+import { CharacteristicComponent } from './pages/characteristic/characteristic.component';
+import { ClassificationComponent } from './pages/classification/classification.component';
+import { ControlModelComponent } from './pages/control-model/control-model.component';
+import { MaterialComponent } from './pages/material/material.component';
+import { CharacteristicAssignmentComponent } from './pages/characteristic-assignment/characteristic-assignment.component'; // NEW IMPORT
+import { EventComponent } from './pages/event/event.component';
+import { BomComponent } from './pages/bom/bom.component';
+import { RoutingComponent } from './pages/routing/routing.component';
+import { ProductionVersionComponent } from './pages/production-version/production-version.component';
+import { ProductOrdersComponent } from './pages/product-orders/product-orders.component';
 
 export const routes: Routes = [
   {
@@ -119,12 +130,12 @@ export const routes: Routes = [
         title: 'Buttons Dashboard ',
       },
       {
-  path: 'users',
-  component: UsersManagementComponent,
-  title: 'User Management',
-  canActivate: [RoleGuard],
-  data: { roles: ['SuperAdmin'] }
-},
+        path: 'users',
+        component: UsersManagementComponent,
+        title: 'User Management',
+        canActivate: [RoleGuard],
+        data: { roles: ['SuperAdmin'] }
+      },
       {
         path: 'images',
         component: ImagesComponent,
@@ -188,16 +199,66 @@ export const routes: Routes = [
         title: 'Stock Movements',
       },
       { path: 'groups', component: GroupListComponent,title: 'park groups', },
-  { path: 'group-form', component: GroupFormComponent, title: 'park group form', },
-  { path: 'group-form/:id', component: GroupFormComponent,title: 'group-form', },
-  { path: 'bins/:id', component: BinListComponent ,title: 'group bins',},
-  { path: 'bin-form/:groupId', component: BinFormComponent ,title: 'add bins',}, // For add
-  { path: 'bin-form/:groupId/:binId', component: BinFormComponent ,title: 'edit bins',}, // For edit
-{ path: 'storage-bin-rules', component: StorageBinRulesComponent,title:'Storage Bin Rules' },
-{ path: 'storage-type-rules', component: EwmStorageTypeRulesComponent },
+      { path: 'group-form', component: GroupFormComponent, title: 'park group form', },
+      { path: 'group-form/:id', component: GroupFormComponent,title: 'group-form', },
+      { path: 'bins/:id', component: BinListComponent ,title: 'group bins',},
+      { path: 'bin-form/:groupId', component: BinFormComponent ,title: 'add bins',}, // For add
+      { path: 'bin-form/:groupId/:binId', component: BinFormComponent ,title: 'edit bins',}, // For edit
+      { path: 'storage-bin-rules', component: StorageBinRulesComponent,title:'Storage Bin Rules' },
+      { path: 'storage-type-rules', component: EwmStorageTypeRulesComponent },
       // New route for handling unit transactions
       { path: 'handling-unit/:id/transactions', component: HandlingUnitTransactionsComponent, title: 'Handling Unit Transactions' },
-  
+      {
+        path: 'work-centers',
+        component: WorkCenterComponent, // Import at top if needed: import { WorkCenterComponent } from './pages/work-center/work-center.component';
+        title: 'Work Centers Dashboard',
+      },
+      {
+        path: 'characteristics',
+        component: CharacteristicComponent,
+        title: 'Characteristics Dashboard',
+      },
+      {
+        path: 'classifications', // NEW ROUTE: Add this for the classification page
+        component: ClassificationComponent,
+        title: 'Classifications Dashboard',
+        // Optionally add RoleGuard if needed, e.g., canActivate: [RoleGuard], data: { roles: ['Admin', 'SuperAdmin'] }
+      },
+      { path: 'control-models', 
+        component: ControlModelComponent,
+        title:'Controle Modem ' },
+      { path: 'materials', 
+        component: MaterialComponent,
+        title:'Material' },
+      // NEW ROUTE: Characteristic Assignments (admin-only example)
+      {
+        path: 'characteristic-assignments',
+        component: CharacteristicAssignmentComponent,
+        title: 'Characteristic Assignments Dashboard',
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'SuperAdmin'] }
+      },
+      { path: 'event', 
+        component: EventComponent,
+        title: 'Event' },
+      {
+        path: 'boms',
+        component: BomComponent,
+        title: 'BOMs Dashboard',
+        // Optional: canActivate: [RoleGuard], data: { roles: ['Admin', 'SuperAdmin'] }
+      },
+      { 
+        path: 'routings', 
+        component: RoutingComponent,
+        title: 'Routings Dashboard' 
+      },
+      { 
+  path: 'production-versions', 
+  component: ProductionVersionComponent,
+  title: 'Production Versions Dashboard' 
+},
+{ path: 'product-orders', component: ProductOrdersComponent, title: 'Product Orders' },
+
     ],
   },
   // auth pages

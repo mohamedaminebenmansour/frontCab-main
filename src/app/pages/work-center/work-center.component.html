@@ -1,0 +1,204 @@
+<p-toast position="center" styleClass="custom-toast"></p-toast>
+<p-confirmDialog key="deleteConfirm"
+    [style]="{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '50vw', maxWidth: '500px' }"
+    [baseZIndex]="10000"></p-confirmDialog>
+
+<div class="flex flex-col gap-4 p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold">Work Centers Management</h2>
+        <p-button label="New Work Center" icon="pi pi-plus" severity="success" (onClick)="openDialog()"
+            class="p-button-success">
+        </p-button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <p-progressSpinner *ngIf="loading()" styleClass="mx-auto"></p-progressSpinner>
+
+    <!-- Table -->
+    <p-table #dt *ngIf="!loading()" [value]="workCenters()" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[5,10,25]" [globalFilterFields]="['workCenterNumber','description','plant','costCenter']"
+        tableStyleClass="w-full">
+
+        <!-- Header with global filter -->
+        <ng-template pTemplate="caption">
+            <div class="flex justify-between items-center">
+                <span class="text-lg font-semibold">Work Centers List</span>
+                <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" placeholder="Search..." (input)="tableFilter($event)" />
+                </span>
+            </div>
+        </ng-template>
+
+        <!-- Columns -->
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="workCenterNumber">Number <p-sortIcon field="workCenterNumber"></p-sortIcon></th>
+                <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+                <th pSortableColumn="plant">Plant <p-sortIcon field="plant"></p-sortIcon></th>
+                <th pSortableColumn="costCenter">Cost Center <p-sortIcon field="costCenter"></p-sortIcon></th>
+                <th>Capacity</th>
+                <th>Active</th>
+                <th pSortableColumn="createdAt">Created At <p-sortIcon field="createdAt"></p-sortIcon></th>
+                <th pSortableColumn="lastUpdated">Last Updated <p-sortIcon field="lastUpdated"></p-sortIcon></th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-workCenter>
+            <tr>
+                <td>{{ workCenter.id || '-' }}</td>
+                <td>{{ workCenter.workCenterNumber }}</td>
+                <td>{{ workCenter.description }}</td>
+                <td>{{ workCenter.plant }}</td>
+                <td>{{ workCenter.costCenter }}</td>
+                <td>{{ workCenter.capacity }} {{ workCenter.capacityUnit }}</td>
+                <td><p-tag [value]="workCenter.isActive ? 'Active' : 'Inactive'"
+                        [severity]="workCenter.isActive ? 'success' : 'warning'"></p-tag></td>
+                <td>{{ workCenter.createdAt | date:'short' }}</td>
+                <td>{{ workCenter.lastUpdated | date:'short' }}</td>
+                <td class="flex gap-2">
+                    <p-button icon="pi pi-pencil" severity="info" size="small" (onClick)="openDialog(workCenter)"
+                        pTooltip="Edit">
+                    </p-button>
+                    <p-button icon="pi pi-trash" severity="danger" size="small" (onClick)="delete(workCenter)"
+                        pTooltip="Delete">
+                    </p-button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <!-- Empty state -->
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="10" class="text-center py-8">No Work Centers found. Create one to get started!</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog Form -->
+<p-dialog header="{{ isEditMode() ? 'Edit Work Center' : 'New Work Center' }}" [visible]="displayDialog()"
+    (visibleChange)="displayDialog.set($event)" [modal]="true" [style]="{width: '50vw'}" [baseZIndex]="11000">
+
+    <form [formGroup]="workCenterForm" (ngSubmit)="save()">
+        <div class="grid p-fluid">
+            <!-- ID (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="id">ID</label>
+                <input id="id" pInputText formControlName="id" class="w-full" readonly />
+            </div>
+
+            <!-- WorkCenter Number -->
+            <div class="field col-12 md:col-6">
+                <label for="workCenterNumber">Work Center Number *</label>
+                <input id="workCenterNumber" pInputText formControlName="workCenterNumber" class="w-full" />
+                <small
+                    *ngIf="workCenterForm.get('workCenterNumber')?.invalid && workCenterForm.get('workCenterNumber')?.touched"
+                    class="p-error">
+                    Number is required (min 3 chars).
+                </small>
+            </div>
+
+            <!-- Description -->
+            <div class="field col-12 md:col-6">
+                <label for="description">Description *</label>
+                <input id="description" pInputText formControlName="description" class="w-full" />
+                <small *ngIf="workCenterForm.get('description')?.invalid && workCenterForm.get('description')?.touched"
+                    class="p-error">
+                    Description is required.
+                </small>
+            </div>
+
+            <!-- Plant -->
+            <div class="field col-12 md:col-6">
+                <label for="plant">Plant *</label>
+                <input id="plant" pInputText formControlName="plant" class="w-full" />
+                <small *ngIf="workCenterForm.get('plant')?.invalid && workCenterForm.get('plant')?.touched"
+                    class="p-error">
+                    Plant is required.
+                </small>
+            </div>
+
+            <!-- Cost Center -->
+            <div class="field col-12 md:col-6">
+                <label for="costCenter">Cost Center *</label>
+                <input id="costCenter" pInputText formControlName="costCenter" class="w-full" />
+                <small *ngIf="workCenterForm.get('costCenter')?.invalid && workCenterForm.get('costCenter')?.touched"
+                    class="p-error">
+                    Cost Center is required.
+                </small>
+            </div>
+
+            <!-- Capacity -->
+            <div class="field col-12 md:col-6">
+                <label for="capacity">Capacity *</label>
+                <p-inputNumber id="capacity" formControlName="capacity" mode="decimal" [min]="0"
+                    class="w-full"></p-inputNumber>
+                <small *ngIf="workCenterForm.get('capacity')?.invalid && workCenterForm.get('capacity')?.touched"
+                    class="p-error">
+                    Capacity must be >= 0.
+                </small>
+            </div>
+
+            <!-- Capacity Unit -->
+            <div class="field col-12 md:col-6">
+                <label for="capacityUnit">Capacity Unit *</label>
+                <p-select id="capacityUnit" formControlName="capacityUnit" [options]="capacityUnits"
+                    placeholder="Select Unit" class="w-full">
+                </p-select>
+                <small
+                    *ngIf="workCenterForm.get('capacityUnit')?.invalid && workCenterForm.get('capacityUnit')?.touched"
+                    class="p-error">
+                    Unit is required.
+                </small>
+            </div>
+
+            <!-- Work Center Type -->
+            <div class="field col-12 md:col-6">
+                <label for="workCenterType">Work Center Type *</label>
+                <p-select id="workCenterType" formControlName="workCenterType" [options]="workCenterTypes"
+                    placeholder="Select Type" class="w-full">
+                </p-select>
+                <small
+                    *ngIf="workCenterForm.get('workCenterType')?.invalid && workCenterForm.get('workCenterType')?.touched"
+                    class="p-error">
+                    Type is required.
+                </small>
+            </div>
+
+            <!-- Is Active -->
+            <div class="field col-12 md:col-6 flex items-center gap-2">
+                <p-toggleSwitch formControlName="isActive"></p-toggleSwitch>
+                <label for="isActive">Active</label>
+            </div>
+
+            <!-- Created At (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="createdAt">Created At</label>
+                <input id="createdAt" pInputText formControlName="createdAt" class="w-full" readonly
+                    [value]="workCenterForm.get('createdAt')?.value | date:'short'" />
+            </div>
+
+            <!-- Last Updated (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="lastUpdated">Last Updated</label>
+                <input id="lastUpdated" pInputText formControlName="lastUpdated" class="w-full" readonly
+                    [value]="workCenterForm.get('lastUpdated')?.value | date:'short'" />
+            </div>
+        </div>
+    </form>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" icon="pi pi-times" severity="secondary"
+                (onClick)="displayDialog.set(false)"></p-button>
+            <p-button label="Save" icon="pi pi-check" severity="primary" (onClick)="save()" [loading]="loading()"
+                [disabled]="workCenterForm.invalid">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>

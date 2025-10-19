@@ -1,0 +1,49 @@
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td { padding: 0.5rem; }
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th { padding: 0.5rem; }
+:host ::ng-deep .p-tag { border-radius: 4px; }
+
+/* Custom toast styling for centered position */
+:host ::ng-deep .custom-toast {
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in forwards;
+}
+
+:host ::ng-deep .custom-toast.p-toast-message-success {
+  background-color: #22c55e;
+  color: white;
+}
+
+:host ::ng-deep .custom-toast.p-toast-message-warn {
+  background-color: #f59e0b;
+  color: white;
+}
+
+/* Custom confirm dialog styling */
+:host ::ng-deep .p-confirm-dialog {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+:host ::ng-deep .p-confirm-dialog .p-dialog-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+:host ::ng-deep .p-confirm-dialog .p-confirm-dialog-message {
+  font-size: 1.1rem;
+}
+
+:host ::ng-deep .p-confirm-dialog .p-button {
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

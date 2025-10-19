@@ -1,176 +1,94 @@
-import { KeyValuePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
-
-import { Component, ViewChild } from '@angular/core';
-import { EventInput, CalendarOptions, DateSelectArg, EventClickArg } from '@fullcalendar/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FullCalendarModule } from '@fullcalendar/angular'; // v6 wrapper
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
-
-interface CalendarEvent extends EventInput {
-  extendedProps: {
-    calendar: string;
-  };
-}
+import { CalendarOptions, EventInput, EventApi, DateSelectArg, EventClickArg } from '@fullcalendar/core'; // FIXED: Import from core, use EventInput for events, EventApi for runtime
 
 @Component({
   selector: 'app-calender',
-  imports: [
-    FormsModule,
-    KeyValuePipe,
-    FullCalendarModule,
-    ModalComponent
-  ],
-  templateUrl: './calender.component.html',
-  styles: ``
+  standalone: true,
+  imports: [CommonModule, FullCalendarModule],
+  template: `
+    <full-calendar [options]="calendarOptions"></full-calendar>
+    <!-- Add your modal or event details UI here if needed -->
+  `,
+  styles: [`
+    /* Your component-specific styles, e.g., for event rendering */
+  `]
 })
-export class CalenderComponent {
-
-  @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
-
-  events: CalendarEvent[] = [];
-  selectedEvent: CalendarEvent | null = null;
-  eventTitle = '';
-  eventStartDate = '';
-  eventEndDate = '';
-  eventLevel = '';
-  isOpen = false;
-
-  calendarsEvents: Record<string, string> = {
-    Danger: 'danger',
-    Success: 'success',
-    Primary: 'primary',
-    Warning: 'warning'
+export class CalenderComponent implements OnInit {
+  calendarOptions: CalendarOptions = {
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    initialView: 'dayGridMonth',
+    editable: true,
+    selectable: true,
+    selectMirror: true,
+    dayMaxEvents: true,
+    weekends: true,
+    // FIXED: Use EventInput[] type, add 'id' as string (required for v6 uniqueness)
+    events: [
+      { id: '1', title: 'All Day Event', date: '2025-10-14' }, // FIXED: EventInput with id
+      { id: '2', title: 'Long Event', date: '2025-10-15' },   // FIXED
+      { id: '3', title: 'Repeating Event', daysOfWeek: [2, 4], startRecur: '2025-10-16' } // FIXED
+    ] as EventInput[],
+    // FIXED: Explicit types for params to avoid implicit 'any'
+    select: (info: DateSelectArg) => this.handleDateSelect(info),
+    eventClick: (info: EventClickArg) => this.handleEventClick(info),
+    // FIXED: Explicit type for eventContent
+    eventContent: (arg: { event: EventApi }) => this.renderEventContent(arg)
   };
 
-  calendarOptions!: CalendarOptions;
+  selectedEvent: EventApi | null = null; // FIXED: Use EventApi for runtime event with id
 
-  ngOnInit() {
-    this.events = [
-      {
-        id: '1',
-        title: 'Event Conf.',
-        start: new Date().toISOString().split('T')[0],
-        extendedProps: { calendar: 'Danger' }
-      },
-      {
-        id: '2',
-        title: 'Meeting',
-        start: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        extendedProps: { calendar: 'Success' }
-      },
-      {
-        id: '3',
-        title: 'Workshop',
-        start: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-        end: new Date(Date.now() + 259200000).toISOString().split('T')[0],
-        extendedProps: { calendar: 'Primary' }
-      }
-    ];
-
-    this.calendarOptions = {
-      plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-      initialView: 'dayGridMonth',
-      headerToolbar: {
-        left: 'prev,next addEventButton',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-      },
-      selectable: true,
-      events: this.events,
-      select: (info) => this.handleDateSelect(info),
-      eventClick: (info) => this.handleEventClick(info),
-      customButtons: {
-        addEventButton: {
-          text: 'Add Event +',
-          click: () => this.openModal()
-        }
-      },
-      eventContent: (arg) => this.renderEventContent(arg)
-    };
+  ngOnInit(): void {
+    // Optional: Load events dynamically
   }
 
-  handleDateSelect(selectInfo: DateSelectArg) {
-    this.resetModalFields();
-    this.eventStartDate = selectInfo.startStr;
-    this.eventEndDate = selectInfo.endStr || selectInfo.startStr;
-    this.openModal();
-  }
+  // FIXED: Typed param, use EventApi for id access
+  private handleDateSelect(selectInfo: DateSelectArg): void {
+    const title = prompt('Please enter a new event title:');
+    const calendarApi = selectInfo.view.calendar;
 
-  handleEventClick(clickInfo: EventClickArg) {
-    const event = clickInfo.event as any;
-    this.selectedEvent = {
-      id: event.id,
-      title: event.title,
-      start: event.startStr,
-      end: event.endStr,
-      extendedProps: { calendar: event.extendedProps.calendar }
-    };
-    this.eventTitle = event.title;
-    this.eventStartDate = event.startStr;
-    this.eventEndDate = event.endStr || '';
-    this.eventLevel = event.extendedProps.calendar;
-    this.openModal();
-  }
-
-  handleAddOrUpdateEvent() {
-    if (this.selectedEvent) {
-      this.events = this.events.map(ev =>
-        ev.id === this.selectedEvent!.id
-          ? {
-              ...ev,
-              title: this.eventTitle,
-              start: this.eventStartDate,
-              end: this.eventEndDate,
-              extendedProps: { calendar: this.eventLevel }
-            }
-          : ev
-      );
-    } else {
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        title: this.eventTitle,
-        start: this.eventStartDate,
-        end: this.eventEndDate,
-        allDay: true,
-        extendedProps: { calendar: this.eventLevel }
-      };
-      this.events = [...this.events, newEvent];
+    if (title) {
+      // FIXED: Use EventInput with generated id
+      calendarApi.addEvent({
+        id: Date.now().toString(), // FIXED: String id for uniqueness
+        title,
+        start: selectInfo.startStr,
+        end: selectInfo.endStr,
+        allDay: selectInfo.allDay
+      } as EventInput);
     }
-    this.calendarOptions.events = this.events;
-    this.closeModal();
-    this.resetModalFields();
+
+    calendarApi.unselect();
   }
 
-  resetModalFields() {
-    this.eventTitle = '';
-    this.eventStartDate = '';
-    this.eventEndDate = '';
-    this.eventLevel = '';
-    this.selectedEvent = null;
+  // FIXED: Typed param, access id via EventApi
+  private handleEventClick(clickInfo: EventClickArg): void {
+    this.selectedEvent = clickInfo.event; // FIXED: EventApi has id
+
+    if (confirm(`Are you sure you want to delete "${clickInfo.event.title}"?`)) {
+      clickInfo.event.remove();
+    }
   }
 
-  openModal() {
-    this.isOpen = true;
-  }
-
-  closeModal() {
-    this.isOpen = false;
-    this.resetModalFields();
-  }
-
-  renderEventContent(eventInfo: any) {
-    const colorClass = `fc-bg-${eventInfo.event.extendedProps.calendar?.toLowerCase()}`;
-    return {
-      html: `
-        <div class="event-fc-color flex fc-event-main ${colorClass} p-1 rounded-sm">
-          <div class="fc-daygrid-event-dot"></div>
-          <div class="fc-event-time">${eventInfo.timeText || ''}</div>
-          <div class="fc-event-title">${eventInfo.event.title}</div>
-        </div>
-      `
-    };
+  // FIXED: Typed arg, access id via event
+  private renderEventContent(arg: { event: EventApi }): HTMLElement {
+    const event = arg.event;
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="event-content">
+        <strong>${event.title}</strong>
+        <p>ID: ${event.id}</p> <!-- FIXED: Access via EventApi -->
+      </div>
+    `;
+    return el;
   }
 }

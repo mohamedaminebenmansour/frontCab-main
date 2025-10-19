@@ -1,0 +1,263 @@
+<p-toast position="center" styleClass="custom-toast"></p-toast>
+<p-confirmDialog key="deleteConfirm"
+    [style]="{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '50vw', maxWidth: '500px' }"
+    [baseZIndex]="10000"></p-confirmDialog>
+
+<div class="flex flex-col gap-4 p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold">Characteristics Management</h2>
+        <p-button label="New Characteristic" icon="pi pi-plus" severity="success" (onClick)="openDialog()"
+            class="p-button-success">
+        </p-button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <p-progressSpinner *ngIf="loading()" styleClass="mx-auto"></p-progressSpinner>
+
+    <!-- Table -->
+    <p-table #dt *ngIf="!loading()" [value]="characteristics()" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[5,10,25]"
+        [globalFilterFields]="['characteristicNumber','characteristicName','dataType','characteristicDescription']"
+        tableStyleClass="w-full">
+
+        <!-- Header with global filter -->
+        <ng-template pTemplate="caption">
+            <div class="flex justify-between items-center">
+                <span class="text-lg font-semibold">Characteristics List</span>
+                <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" placeholder="Search..." (input)="tableFilter($event)" />
+                </span>
+            </div>
+        </ng-template>
+
+        <!-- Columns -->
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="characteristicNumber">Number <p-sortIcon field="characteristicNumber"></p-sortIcon>
+                </th>
+                <th pSortableColumn="characteristicName">Name <p-sortIcon field="characteristicName"></p-sortIcon></th>
+                <th pSortableColumn="dataType">Data Type <p-sortIcon field="dataType"></p-sortIcon></th>
+                <th pSortableColumn="characteristicDescription">Description <p-sortIcon
+                        field="characteristicDescription"></p-sortIcon></th>
+                <th>Value Range</th>
+                <th>Default Value</th>
+                <th>Unit of Measure</th>
+                <th>Required</th>
+                <th>Single Value</th>
+                <th pSortableColumn="characteristicGroup">Group <p-sortIcon field="characteristicGroup"></p-sortIcon>
+                </th>
+                <th pSortableColumn="validityStartDate">Start Date <p-sortIcon field="validityStartDate"></p-sortIcon>
+                </th>
+                <th pSortableColumn="validityEndDate">End Date <p-sortIcon field="validityEndDate"></p-sortIcon></th>
+                <th pSortableColumn="createdAt">Created At <p-sortIcon field="createdAt"></p-sortIcon></th>
+                <th pSortableColumn="lastUpdated">Last Updated <p-sortIcon field="lastUpdated"></p-sortIcon></th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-characteristic>
+            <tr>
+                <td>{{ characteristic.id || '-' }}</td>
+                <td>{{ characteristic.characteristicNumber }}</td>
+                <td>{{ characteristic.characteristicName }}</td>
+                <td>{{ characteristic.dataType }}</td>
+                <td>{{ characteristic.characteristicDescription }}</td>
+                <td>{{ characteristic.valueRange || '-' }}</td>
+                <td>{{ characteristic.defaultValue || '-' }}</td>
+                <td>{{ characteristic.unitOfMeasure || '-' }}</td>
+                <td><p-tag [value]="characteristic.isRequired ? 'Yes' : 'No'"
+                        [severity]="characteristic.isRequired ? 'success' : 'warning'"></p-tag></td>
+                <td><p-tag [value]="characteristic.isSingleValue ? 'Yes' : 'No'"
+                        [severity]="characteristic.isSingleValue ? 'success' : 'warning'"></p-tag></td>
+                <td>{{ characteristic.characteristicGroup }}</td>
+                <td>{{ characteristic.validityStartDate | date:'shortDate' }}</td>
+                <td>{{ characteristic.validityEndDate | date:'shortDate' }}</td>
+                <td>{{ characteristic.createdAt | date:'short' }}</td>
+                <td>{{ characteristic.lastUpdated | date:'short' }}</td>
+                <td class="flex gap-2">
+                    <p-button icon="pi pi-pencil" severity="info" size="small" (onClick)="openDialog(characteristic)"
+                        pTooltip="Edit">
+                    </p-button>
+                    <p-button icon="pi pi-trash" severity="danger" size="small" (onClick)="delete(characteristic)"
+                        pTooltip="Delete">
+                    </p-button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <!-- Empty state -->
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="16" class="text-center py-8">No Characteristics found. Create one to get started!</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog Form -->
+<p-dialog header="{{ isEditMode() ? 'Edit Characteristic' : 'New Characteristic' }}" [visible]="displayDialog()"
+    (visibleChange)="displayDialog.set($event)" [modal]="true" [style]="{width: '50vw'}" [baseZIndex]="11000">
+
+    <form [formGroup]="characteristicForm" (ngSubmit)="save()">
+        <div class="grid gap-4 p-fluid">
+            <!-- ID (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="id" class="block text-sm font-medium text-gray-700">ID</label>
+                <input id="id" pInputText formControlName="id" class="w-full border-gray-300 rounded-md shadow-sm"
+                    readonly />
+            </div>
+
+            <!-- Characteristic Number -->
+            <div class="field col-12 md:col-6">
+                <label for="characteristicNumber" class="block text-sm font-medium text-gray-700">Characteristic Number
+                    *</label>
+                <input id="characteristicNumber" pInputText formControlName="characteristicNumber"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+                <small
+                    *ngIf="characteristicForm.get('characteristicNumber')?.invalid && characteristicForm.get('characteristicNumber')?.touched"
+                    class="text-red-600">
+                    Number is required (min 3 chars).
+                </small>
+            </div>
+
+            <!-- Characteristic Name -->
+            <div class="field col-12 md:col-6">
+                <label for="characteristicName" class="block text-sm font-medium text-gray-700">Characteristic Name
+                    *</label>
+                <input id="characteristicName" pInputText formControlName="characteristicName"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+                <small
+                    *ngIf="characteristicForm.get('characteristicName')?.invalid && characteristicForm.get('characteristicName')?.touched"
+                    class="text-red-600">
+                    Name is required.
+                </small>
+            </div>
+
+            <!-- Data Type -->
+            <div class="field col-12 md:col-6">
+                <label for="dataType" class="block text-sm font-medium text-gray-700">Data Type *</label>
+                <p-select id="dataType" formControlName="dataType" [options]="dataTypes" placeholder="Select Data Type"
+                    class="w-full"></p-select>
+                <small
+                    *ngIf="characteristicForm.get('dataType')?.invalid && characteristicForm.get('dataType')?.touched"
+                    class="text-red-600">
+                    Data Type is required.
+                </small>
+            </div>
+
+            <!-- Characteristic Description -->
+            <div class="field col-12">
+                <label for="characteristicDescription" class="block text-sm font-medium text-gray-700">Description
+                    *</label>
+                <input id="characteristicDescription" pInputText formControlName="characteristicDescription"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+                <small
+                    *ngIf="characteristicForm.get('characteristicDescription')?.invalid && characteristicForm.get('characteristicDescription')?.touched"
+                    class="text-red-600">
+                    Description is required.
+                </small>
+            </div>
+
+            <!-- Value Range -->
+            <div class="field col-12 md:col-6">
+                <label for="valueRange" class="block text-sm font-medium text-gray-700">Value Range</label>
+                <input id="valueRange" pInputText formControlName="valueRange"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+
+            <!-- Default Value -->
+            <div class="field col-12 md:col-6">
+                <label for="defaultValue" class="block text-sm font-medium text-gray-700">Default Value</label>
+                <input id="defaultValue" pInputText formControlName="defaultValue"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+
+            <!-- Unit of Measure -->
+            <div class="field col-12 md:col-6">
+                <label for="unitOfMeasure" class="block text-sm font-medium text-gray-700">Unit of Measure</label>
+                <input id="unitOfMeasure" pInputText formControlName="unitOfMeasure"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+
+            <!-- Is Required -->
+            <div class="field col-12 md:col-6 flex items-center gap-2">
+                <p-toggleSwitch formControlName="isRequired"></p-toggleSwitch>
+                <label for="isRequired" class="text-sm font-medium text-gray-700">Required</label>
+            </div>
+
+            <!-- Is Single Value -->
+            <div class="field col-12 md:col-6 flex items-center gap-2">
+                <p-toggleSwitch formControlName="isSingleValue"></p-toggleSwitch>
+                <label for="isSingleValue" class="text-sm font-medium text-gray-700">Single Value</label>
+            </div>
+
+            <!-- Characteristic Group -->
+            <div class="field col-12 md:col-6">
+                <label for="characteristicGroup" class="block text-sm font-medium text-gray-700">Characteristic Group
+                    *</label>
+                <p-select id="characteristicGroup" formControlName="characteristicGroup"
+                    [options]="characteristicGroups" placeholder="Select Group" class="w-full"></p-select>
+                <small
+                    *ngIf="characteristicForm.get('characteristicGroup')?.invalid && characteristicForm.get('characteristicGroup')?.touched"
+                    class="text-red-600">
+                    Group is required.
+                </small>
+            </div>
+
+            <!-- Validity Start Date -->
+            <div class="field col-12 md:col-6">
+                <label for="validityStartDate" class="block text-sm font-medium text-gray-700">Validity Start Date
+                    *</label>
+                <input id="validityStartDate" type="date" formControlName="validityStartDate"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+                <small
+                    *ngIf="characteristicForm.get('validityStartDate')?.invalid && characteristicForm.get('validityStartDate')?.touched"
+                    class="text-red-600">
+                    Start Date is required.
+                </small>
+            </div>
+
+            <!-- Validity End Date -->
+            <div class="field col-12 md:col-6">
+                <label for="validityEndDate" class="block text-sm font-medium text-gray-700">Validity End Date *</label>
+                <input id="validityEndDate" type="date" formControlName="validityEndDate"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" />
+                <small
+                    *ngIf="characteristicForm.get('validityEndDate')?.invalid && characteristicForm.get('validityEndDate')?.touched"
+                    class="text-red-600">
+                    End Date is required.
+                </small>
+            </div>
+
+            <!-- Created At (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="createdAt" class="block text-sm font-medium text-gray-700">Created At</label>
+                <input id="createdAt" pInputText formControlName="createdAt"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" readonly
+                    [value]="characteristicForm.get('createdAt')?.value | date:'short'" />
+            </div>
+
+            <!-- Last Updated (read-only) -->
+            <div class="field col-12 md:col-6">
+                <label for="lastUpdated" class="block text-sm font-medium text-gray-700">Last Updated</label>
+                <input id="lastUpdated" pInputText formControlName="lastUpdated"
+                    class="w-full border-gray-300 rounded-md shadow-sm p-2" readonly
+                    [value]="characteristicForm.get('lastUpdated')?.value | date:'short'" />
+            </div>
+        </div>
+    </form>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" icon="pi pi-times" severity="secondary"
+                (onClick)="displayDialog.set(false)"></p-button>
+            <p-button label="Save" icon="pi pi-check" severity="primary" (onClick)="save()" [loading]="loading()"
+                [disabled]="characteristicForm.invalid">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>

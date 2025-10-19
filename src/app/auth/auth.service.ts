@@ -10,7 +10,7 @@ import { jwtDecode } from 'jwt-decode'; // Fixed import: Named import
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.capStockManagerApiUrl;
   private rolesSubject = new BehaviorSubject<string[]>([]);
   roles$ = this.rolesSubject.asObservable();
 

@@ -1,0 +1,125 @@
+<!-- src/app/pages/production-version/production-version.component.html -->
+<div class="p-4">
+    <h2 class="text-2xl font-bold mb-4">Production Versions Management</h2>
+
+    <p-button label="Create New" icon="pi pi-plus" (click)="openCreateDialog()" class="mb-4"></p-button>
+
+    <p-table [value]="productionVersions()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Version Code</th>
+                <th>Description</th>
+                <th>BOM</th>
+                <th>Routing</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-pv>
+            <tr>
+                <td>{{ pv.id }}</td>
+                <td>{{ pv.versionCode }}</td>
+                <td>{{ pv.description }}</td>
+                <td>{{ getBOMLabel(pv.bom) }}</td>
+                <td>{{ getRoutingLabel(pv.routing) }}</td>
+                <td class="flex space-x-2">
+                    <p-button icon="pi pi-pencil" (click)="openEditDialog(pv)"
+                        styleClass="p-button-rounded p-button-success" pTooltip="Edit"></p-button>
+                    <p-button icon="pi pi-trash" (click)="deleteProductionVersion(pv)"
+                        styleClass="p-button-rounded p-button-danger" pTooltip="Delete"></p-button>
+                    <p-button icon="pi pi-plus-circle" (click)="openBOMDialog(pv, true)"
+                        styleClass="p-button-rounded p-button-info" pTooltip="Add BOM"></p-button>
+                    <p-button icon="pi pi-minus-circle" (click)="openBOMDialog(pv, false)"
+                        styleClass="p-button-rounded p-button-warning" pTooltip="Remove BOM"></p-button>
+                    <p-button icon="pi pi-plus-circle" (click)="openRoutingDialog(pv, true)"
+                        styleClass="p-button-rounded p-button-primary" pTooltip="Add Routing"></p-button>
+                    <p-button icon="pi pi-minus-circle" (click)="openRoutingDialog(pv, false)"
+                        styleClass="p-button-rounded p-button-secondary" pTooltip="Remove Routing"></p-button>
+                </td>
+            </tr>
+            <tr *ngIf="selectedProductionVersion()?.id === pv.id">
+                <td colspan="6">
+                    <div class="p-2 bg-gray-100 rounded-md">
+                        <h3 class="text-lg font-semibold">Details:</h3>
+                        <p>Version Code: {{ pv.versionCode }}</p>
+                        <p>Description: {{ pv.description }}</p>
+                        <p>Created At: {{ pv.createdAt | date }}</p>
+                        <p>Last Updated: {{ pv.lastUpdated | date }}</p>
+                        <p>BOM: {{ getBOMLabel(pv.bom) }}</p>
+                        <p>Routing: {{ getRoutingLabel(pv.routing) }}</p>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <!-- Form Dialog for Create/Edit -->
+    <p-dialog [header]="isEditMode() ? 'Edit Production Version' : 'Create Production Version'"
+        [visible]="displayFormDialog()" (visibleChange)="displayFormDialog.set($event)" [modal]="true"
+        [style]="{width: '50vw'}">
+        <form [formGroup]="productionVersionForm" class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="versionCode" class="block mb-1 font-medium">Version Code</label>
+                <input type="text" id="versionCode" formControlName="versionCode"
+                    class="w-full rounded-md border p-2" />
+            </div>
+            <div>
+                <label for="description" class="block mb-1 font-medium">Description</label>
+                <input type="text" id="description" formControlName="description"
+                    class="w-full rounded-md border p-2" />
+            </div>
+        </form>
+        <ng-template pTemplate="footer">
+            <p-button label="Save" icon="pi pi-check" (click)="saveProductionVersion()"
+                styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayFormDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- BOM Dialog for Add/Remove -->
+    <p-dialog [header]="isAddMode() ? 'Add BOM' : 'Remove BOM'" [visible]="displayBOMDialog()"
+        (visibleChange)="displayBOMDialog.set($event)" [modal]="true" [style]="{width: '30vw'}">
+        <div *ngIf="isAddMode(); else removeBOMTemplate">
+            <label for="bomId" class="block mb-1 font-medium">BOM</label>
+            <select id="bomId" [ngModel]="selectedBOMId()" (ngModelChange)="selectedBOMId.set($event)"
+                class="w-full rounded-md border p-2">
+                <option value="0" disabled selected>Select a BOM</option>
+                <option *ngFor="let opt of bomsForAdd()" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+        <ng-template #removeBOMTemplate>
+            <p>Are you sure you want to remove the assigned BOM?</p>
+        </ng-template>
+        <ng-template pTemplate="footer">
+            <p-button label="Submit" icon="pi pi-check" (click)="manageBOM()" styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayBOMDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Routing Dialog for Add/Remove -->
+    <p-dialog [header]="isAddMode() ? 'Add Routing' : 'Remove Routing'" [visible]="displayRoutingDialog()"
+        (visibleChange)="displayRoutingDialog.set($event)" [modal]="true" [style]="{width: '30vw'}">
+        <div *ngIf="isAddMode(); else removeRoutingTemplate">
+            <label for="routingId" class="block mb-1 font-medium">Routing</label>
+            <select id="routingId" [ngModel]="selectedRoutingId()" (ngModelChange)="selectedRoutingId.set($event)"
+                class="w-full rounded-md border p-2">
+                <option value="0" disabled selected>Select a Routing</option>
+                <option *ngFor="let opt of routingsForAdd()" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+        <ng-template #removeRoutingTemplate>
+            <p>Are you sure you want to remove the assigned Routing?</p>
+        </ng-template>
+        <ng-template pTemplate="footer">
+            <p-button label="Submit" icon="pi pi-check" (click)="manageRouting()"
+                styleClass="p-button-success"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" (click)="displayRoutingDialog.set(false)"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+</div>
