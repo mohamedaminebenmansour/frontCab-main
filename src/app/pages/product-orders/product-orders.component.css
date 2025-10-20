@@ -1,0 +1,29 @@
+/* src/app/pages/product-orders/product-orders.component.css */
+/* To make page use all height: Use flex and full height on elements. */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;  /* Or 100vh if root */
+}
+
+.p-4 {
+  flex: 1;  /* Grow to fill */
+  display: flex;
+  flex-direction: column;
+}
+
+.p-treetable {
+  flex: 1;  /* Table uses remaining space */
+  overflow: auto;  /* Scroll if needed */
+}
+
+/* Add colors for levels (UX tip) */
+.p-treetable .p-treetable-tbody > tr[level="0"] {
+  background-color: #f0f8ff;  /* Alice blue for root */
+}
+
+.p-treetable .p-treetable-tbody > tr[level="1"] {
+  background-color: #e6ffe6;  /* Light green for level 1 */
+}
+
+/* And so on for deeper levels */

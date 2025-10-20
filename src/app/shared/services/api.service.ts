@@ -498,16 +498,16 @@ deleteCharacteristic(id: number): Observable<any> { // Changed to any
   }
 
   // NEW: Assign and Remove Characteristic (using characteristicNumber as string)
-  assignCharacteristic(classificationId: number, characteristicNumber: string): Observable<void> {
-    return this.http.post<void>(`${this.mescoFiApiUrl}/Classification/${classificationId}/assign-characteristic/${characteristicNumber}`, {}, this.httpOptions)
+  assignCharacteristic(classificationId: number, characteristicId: number): Observable<void> {
+    return this.http.post<void>(`${this.mescoFiApiUrl}/Classification/${classificationId}/assign-characteristic/${characteristicId}`, {}, this.httpOptions)
       .pipe(
         tap(() => console.log('API response - assignCharacteristic successful')),
         catchError(this.handleError)
       );
   }
 
-  removeCharacteristic(classificationId: number, characteristicNumber: string): Observable<void> {
-    return this.http.delete<void>(`${this.mescoFiApiUrl}/Classification/${classificationId}/remove-characteristic/${characteristicNumber}`)
+  removeCharacteristic(classificationId: number, characteristicId: number): Observable<void> {
+    return this.http.delete<void>(`${this.mescoFiApiUrl}/Classification/${classificationId}/remove-characteristic/${characteristicId}`)
       .pipe(
         tap(() => console.log('API response - removeCharacteristic successful')),
         catchError(this.handleError)
